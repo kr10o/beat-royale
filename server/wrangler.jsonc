@@ -3,6 +3,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-03-07",
   "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": ".output/public",
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
