@@ -40,7 +40,7 @@
 
         <!-- Main Content Area -->
         <div class="main-content">
-          <InventoryGrid />
+          <InventoryGrid :items="inventory?.items || []" />
         </div>
       </div>
     </div>
@@ -49,14 +49,23 @@
 
 <script setup>
 import { useRoute, useFetch } from '#app';
+import { useApi } from '~/composables/useApi';
 import EloRankDisplay from '~/components/dashboard/EloRankDisplay.vue';
 import InventoryGrid from '~/components/dashboard/InventoryGrid.vue';
 
 const route = useRoute();
+const { apiBase } = useApi();
 
-// Edge-SSR Fetch sequence targeting the local worker or relative worker address
-const apiBase = typeof window === 'undefined' ? 'http://localhost:8787' : '';
-const { data: profile, pending, error } = await useFetch(`${apiBase}/api/profiles/${route.params.id}`);
+// Edge-SSR fetch against the configured Worker origin (works on server + client).
+const { data: profile, pending, error } = await useFetch(`${apiBase}/api/profiles/${route.params.id}`, {
+  credentials: 'include',
+});
+
+// Real inventory for this producer (empty array → InventoryGrid shows empty state).
+const { data: inventory } = await useFetch(`${apiBase}/api/inventory/${route.params.id}`, {
+  credentials: 'include',
+  default: () => ({ items: [] }),
+});
 
 const formatDate = (dateStr) => {
   if (!dateStr) return 'Recently';

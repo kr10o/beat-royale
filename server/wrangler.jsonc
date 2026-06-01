@@ -17,7 +17,7 @@
 	],
 	"d1_databases": [
 		{
-			"binding": "beat_royale",
+			"binding": "DB",
 			"database_name": "beat-royale",
 			"database_id": "b6a1a418-b74c-4dfa-ac68-77244ee2405e"
 		}

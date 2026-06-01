@@ -32,7 +32,7 @@
           <span class="badge" v-if="item.isNew">NEW</span>
         </div>
         <div class="item-info">
-          <h4 class="item-name">{{ item.name }}</h4>
+          <h4 class="item-name">{{ item.name || item.item_id }}</h4>
           <span class="item-category">{{ item.item_type.replace('_', ' ').toUpperCase() }}</span>
           <p class="item-meta">Unlocked {{ formatDate(item.unlocked_at) }}</p>
         </div>
@@ -45,15 +45,11 @@
 import { ref, computed } from 'vue';
 
 const props = defineProps({
+  // Real inventory rows from /api/inventory/:userId.
+  // Each row: { id, item_type, item_id, unlocked_at }.
   items: {
     type: Array,
-    default: () => [
-      { id: '1', item_type: 'sample_pack', name: 'Tokyo Phonk Essentials Vol. 1', unlocked_at: '2026-05-20T10:00:00Z', isNew: true },
-      { id: '2', item_type: 'badge', name: 'Beta Battle Pioneer Badge', unlocked_at: '2026-05-01T12:00:00Z' },
-      { id: '3', item_type: 'vst_skin', name: 'Neon Glitch OTT VST Skin', unlocked_at: '2026-05-15T15:30:00Z' },
-      { id: '4', item_type: 'sample_pack', name: 'Liquid Drum & Bass Stems', unlocked_at: '2026-05-28T09:12:00Z', isNew: true },
-      { id: '5', item_type: 'badge', name: '10-Win Battle Streak Badge', unlocked_at: '2026-05-18T18:00:00Z' }
-    ]
+    default: () => []
   }
 });
 

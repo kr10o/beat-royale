@@ -23,13 +23,17 @@
 </template>
 
 <script setup>
+import { useApi } from '~/composables/useApi';
+
 const emit = defineEmits(['sso-trigger']);
+const { oauthUrl } = useApi();
 
 const triggerSSO = (provider) => {
-  console.log(`Initiating SSO redirection to ${provider}...`);
-  // Mock OAuth redirection simulation
-  alert(`SSO Redirect: Transferring to official ${provider} authorization gateway...`);
   emit('sso-trigger', provider);
+  // Redirect to the Worker's OAuth entrypoint, which runs the full
+  // authorization-code flow. Providers without configured credentials
+  // respond 501 rather than crashing.
+  window.location.href = oauthUrl(provider);
 };
 </script>
 

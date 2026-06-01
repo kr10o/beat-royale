@@ -45,8 +45,16 @@ CREATE TABLE battles (
   id TEXT PRIMARY KEY,
   lobby_name TEXT NOT NULL,
   host_id TEXT NOT NULL,
+  producer_1_id TEXT, -- competing producer (user id), set at battle creation
+  producer_2_id TEXT, -- competing producer (user id), set at battle creation
   winner_id TEXT,
+  status TEXT DEFAULT 'pending', -- 'pending', 'producing', 'voting', 'finished'
   started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   ended_at DATETIME,
   prize_pool_cents INTEGER DEFAULT 0
 );
+
+-- Helpful indexes for profile/battle lookups.
+CREATE INDEX IF NOT EXISTS idx_inventory_user ON inventory(user_id);
+CREATE INDEX IF NOT EXISTS idx_social_user ON social_graph(user_id);
+CREATE INDEX IF NOT EXISTS idx_battles_host ON battles(host_id);
