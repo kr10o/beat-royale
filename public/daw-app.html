@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Isolated DAW Engine</title>
+  <!-- Load dependencies via CDN inside the sandbox -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #070708;
+      --bg-surface: #121216;
+      --border-color: #1e1e24;
+      --neon-blue: #00f2fe;
+      --neon-magenta: #ff007f;
+      --neon-green: #39ff14;
+      --text-muted: #888899;
+      --text-light: #f1f1f5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--text-light);
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    .daw-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 20px;
+    }
+
+    .status-badge {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: rgba(0, 242, 254, 0.15);
+      color: var(--neon-blue);
+      border: 1px solid var(--neon-blue);
+      font-weight: 700;
+    }
+
+    .status-badge.locked {
+      background: rgba(255, 0, 127, 0.15);
+      color: var(--neon-magenta);
+      border: 1px solid var(--neon-magenta);
+    }
+
+    .visualizer-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      height: 120px;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .sequencer-grid {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .instrument-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .instrument-label {
+      width: 100px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .step-container {
+      display: grid;
+      grid-template-columns: repeat(16, minmax(0, 1fr));
+      gap: 6px;
+      flex-grow: 1;
+    }
+
+    .step-btn {
+      aspect-ratio: 1;
+      background: #1c1c22;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+
+    .step-btn:hover {
+      border-color: var(--neon-blue);
+      background: #252530;
+    }
+
+    .step-btn.active {
+      background: var(--neon-blue);
+      box-shadow: 0 0 8px var(--neon-blue);
+      border-color: #ffffff;
+    }
+
+    .step-btn.active.snare {
+      background: var(--neon-magenta);
+      box-shadow: 0 0 8px var(--neon-magenta);
+    }
+
+    .step-btn.active.hihat {
+      background: var(--neon-green);
+      box-shadow: 0 0 8px var(--neon-green);
+    }
+
+    .transport-bar {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    button.control-btn {
+      background: #1d1d24;
+      color: var(--text-light);
+      border: 1px solid var(--border-color);
+      padding: 10px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+    }
+
+    button.control-btn:hover:not(:disabled) {
+      background: var(--neon-blue);
+      color: #000000;
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
+      border-color: var(--neon-blue);
+    }
+
+    button.control-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .synth-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .synth-knob {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .synth-knob label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .synth-knob input[type="range"] {
+      width: 100%;
+      accent-color: var(--neon-blue);
+      background: #1c1c22;
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="daw-container">
+    <div class="header-bar">
+      <div>
+        <h3 style="font-weight: 800; letter-spacing: -0.02em;">ISOLATED AUDIO CLIENT</h3>
+        <p style="font-size: 0.75rem; color: var(--text-muted)">Sub-thread sandbox avoiding main DOM latency</p>
+      </div>
+      <div id="lockStatus" class="status-badge">Engine Active</div>
+    </div>
+
+    <!-- Web Audio Waveform visualizer -->
+    <div class="visualizer-card">
+      <canvas id="waveformCanvas"></canvas>
+    </div>
+
+    <!-- Synth Settings -->
+    <div class="synth-panel">
+      <div class="synth-knob">
+        <label>Filter Cutoff</label>
+        <input type="range" id="cutoff" min="100" max="4000" value="1200">
+      </div>
+      <div class="synth-knob">
+        <label>Synth Decay</label>
+        <input type="range" id="decay" min="0.1" max="1" step="0.05" value="0.4">
+      </div>
+      <div class="synth-knob">
+        <label>BPM Tempo</label>
+        <input type="range" id="bpm" min="60" max="180" value="120">
+      </div>
+    </div>
+
+    <!-- 16-Step Sequencer Grid -->
+    <div class="sequencer-grid">
+      <!-- Kick Row -->
+      <div class="instrument-row">
+        <span class="instrument-label">Kick Drum</span>
+        <div class="step-container" id="kickRow">
+          <!-- 16 buttons will be generated by script -->
+        </div>
+      </div>
+      
+      <!-- Snare Row -->
+      <div class="instrument-row">
+        <span class="instrument-label">Snare</span>
+        <div class="step-container" id="snareRow">
+          <!-- 16 buttons -->
+        </div>
+      </div>
+
+      <!-- Hihat Row -->
+      <div class="instrument-row">
+        <span class="instrument-label">Closed Hat</span>
+        <div class="step-container" id="hatRow">
+          <!-- 16 buttons -->
+        </div>
+      </div>
+    </div>
+
+    <div class="transport-bar">
+      <button class="control-btn" id="playBtn">Play Sequence</button>
+      <button class="control-btn" id="triggerEffect">Glitch FX</button>
+      <button class="control-btn" id="loadZipBtn">Load Pack (ZIP)</button>
+    </div>
+  </div>
+
+  <script src="/js/jszip-processor.js"></script>
+  <script src="/js/tone-engine.js"></script>
+</body>
+</html>

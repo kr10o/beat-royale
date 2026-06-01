@@ -1,0 +1,76 @@
+/* assets/css/index.css */
+
+/* Global variable tokens */
+:root {
+  --bg-pitch: #050508;
+  --bg-surface-dark: #0a0a0f;
+  --bg-surface-glass: rgba(18, 18, 24, 0.7);
+  --border-glow: rgba(255, 255, 255, 0.08);
+  
+  --neon-blue: #00f2fe;
+  --neon-magenta: #ff007f;
+  --neon-green: #39ff14;
+  
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* Reset baseline defaults */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-pitch);
+  color: #f1f1f5;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-pitch);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #181822;
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-magenta);
+}
+
+/* Utilities */
+.text-gradient {
+  background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-magenta) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.glow-glow {
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+}
+
+/* Dynamic Fade-In animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
