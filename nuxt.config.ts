@@ -24,5 +24,12 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'cloudflare-pages'
+  },
+
+  // Redirect en-dash typos and bare paths → the real static file
+  routeRules: {
+    '/daw‑app':      { redirect: '/daw-app.html' },
+    '/daw–app':      { redirect: '/daw-app.html' },
+    '/daw-app':      { redirect: '/daw-app.html' },
   }
 })

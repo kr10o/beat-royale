@@ -69,7 +69,7 @@ function playFeedbackSound(type) {
     } else if (type === 'hihat') {
       hihatSynth.triggerAttackRelease("G5", "32n");
     }
-  } catch(e) {}
+  } catch (e) { }
 }
 
 // Setup Tone Audio Nodes
@@ -235,7 +235,7 @@ loadZipBtn.addEventListener('click', async () => {
 // Canvas Oscilloscope Renderer
 function drawVisuals() {
   requestAnimationFrame(drawVisuals);
-  
+
   // Clear Canvas
   ctx.fillStyle = '#0a0a0f';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -271,7 +271,7 @@ function drawVisuals() {
   ctx.strokeStyle = isLocked ? '#ff007f' : '#00f2fe';
   ctx.lineWidth = 2.5;
   ctx.beginPath();
-  
+
   const sliceWidth = canvas.width / values.length;
   let x = 0;
 
@@ -287,7 +287,7 @@ function drawVisuals() {
     }
     x += sliceWidth;
   }
-  
+
   ctx.stroke();
 }
 
@@ -344,7 +344,7 @@ window.addEventListener('message', async (e) => {
     // Inside standard DAW, this retrieves master node audio stream chunks.
     // For our sandboxed simulator, we generate a mock wave-buffer blob.
     const mockAudioBuffer = new Uint8Array(8192);
-    for(let i = 0; i < mockAudioBuffer.length; i++) {
+    for (let i = 0; i < mockAudioBuffer.length; i++) {
       mockAudioBuffer[i] = Math.floor(Math.random() * 256);
     }
     const audioBlob = new Blob([mockAudioBuffer], { type: 'audio/webm' });
