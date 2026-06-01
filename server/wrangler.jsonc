@@ -12,14 +12,14 @@
 	"kv_namespaces": [
 		{
 			"binding": "LOBBY_CACHE",
-			"id": "lobby_cache_prod"
+			"id": "d623ec4ca94b46e78ba99a856f0870fc"
 		}
 	],
 	"d1_databases": [
 		{
-			"binding": "beat_royale",
+			"binding": "DB",
 			"database_name": "beat-royale",
-			"database_id": "b6a1a418-b74c-4dfa-ac68-77244ee2405e"
+			"database_id": "67ad1b7e-3e68-43f3-9ab8-84be8f2ca02f"
 		}
 	],
 	"r2_buckets": [

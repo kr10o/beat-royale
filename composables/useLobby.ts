@@ -4,7 +4,7 @@ import { ref } from 'vue';
 export const useLobby = () => {
   const activeLobbyId = ref('main-stage');
   
-  const getActiveLobbyInfo = async (lobbyId) => {
+  const getActiveLobbyInfo = async (lobbyId: string) => {
     // Return structured details for dynamic layout renders
     return {
       id: lobbyId,

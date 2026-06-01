@@ -40,7 +40,13 @@ build/Release
 
 # Dependency directories
 node_modules/
+**/node_modules/
 jspm_packages/
+
+# Cloudflare Wrangler local state / build artifacts
+.wrangler/
+**/.wrangler/
+.dev.vars
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/

@@ -4,6 +4,14 @@ export default defineNuxtConfig({
   modules: [
     '@pinia/nuxt',
   ],
+  runtimeConfig: {
+    public: {
+      // Origin of the separately-deployed Hono Worker API.
+      // Override in production with NUXT_PUBLIC_API_BASE (e.g. https://beat-battle-royale.<acct>.workers.dev).
+      // Defaults to the local `wrangler dev` address for development.
+      apiBase: 'http://localhost:8787',
+    },
+  },
   css: [
     '~/assets/css/index.css'
   ],

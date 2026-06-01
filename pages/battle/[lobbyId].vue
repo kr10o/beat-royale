@@ -59,11 +59,15 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute } from '#app';
+import { useApi } from '~/composables/useApi';
+import { useAuth } from '~/composables/useAuth';
 import TimerOverlay from '~/components/battle/TimerOverlay.vue';
 import PollingBars from '~/components/battle/PollingBars.vue';
 import ChatBox from '~/components/battle/ChatBox.vue';
 
 const route = useRoute();
+const { apiBase, lobbyWsUrl } = useApi();
+const auth = useAuth();
 const lobbyId = route.params.lobbyId || 'main-stage';
 const lobbyName = ref(lobbyId);
 
@@ -77,9 +81,11 @@ const sysConsoleLog = ref('Console initialized. Waiting for host to launch battl
 const dawFrame = ref(null);
 let socket = null;
 
-// Local Mock User Session details
-const mockUser = 'Producer_' + Math.floor(Math.random() * 900 + 100);
-const mockUserId = 'usr_' + Math.floor(Math.random() * 1000000);
+// Identify the participant. Authenticated users carry their real id (so votes
+// dedup correctly and chat is attributed); anonymous spectators get an
+// ephemeral id scoped to this tab.
+const sessionUser = ref('Spectator_' + Math.floor(Math.random() * 900 + 100));
+const sessionUserId = ref('anon_' + Math.floor(Math.random() * 1000000));
 
 const setupDawCommunication = () => {
   console.log("DAW Iframe mounted successfully.");
@@ -87,15 +93,18 @@ const setupDawCommunication = () => {
 };
 
 // Start WS connection pool
-onMounted(() => {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  // In development, Hono runs on localhost:8787. In production, same host is standard.
-  const host = window.location.hostname === 'localhost' ? 'localhost:8787' : window.location.host;
-  const socketUrl = `${protocol}//${host}/api/lobby/${lobbyId}`;
-  
+onMounted(async () => {
+  // Resolve the authenticated identity (if any) so chat/votes are attributed.
+  await auth.checkSession();
+  if (auth.isAuthenticated.value && auth.user.value) {
+    sessionUserId.value = auth.user.value.id;
+    sessionUser.value = auth.user.value.name;
+  }
+
+  const socketUrl = lobbyWsUrl(lobbyId);
   console.log(`Establishing socket connection to: ${socketUrl}`);
   sysConsoleLog.value = "Contacting edge coordinates...";
-  
+
   socket = new WebSocket(socketUrl);
 
   socket.onopen = () => {
@@ -163,20 +172,20 @@ const handleIframeMessage = async (e) => {
     sysConsoleLog.value = `Mix buffer compiled. ByteLength: ${audioBlob.size}. Retrieving presigned ticket...`;
     
     try {
-      // 1. Fetch presigned upload ticket from Hono
-      const apiHost = window.location.hostname === 'localhost' ? 'http://localhost:8787' : '';
-      const response = await fetch(`${apiHost}/api/upload/presigned`);
+      // 1. Fetch an upload ticket from the Worker.
+      const response = await fetch(`${apiBase}/api/upload/presigned`, { credentials: 'include' });
       const { uploadUrl, objectKey } = await response.json();
-      
-      sysConsoleLog.value = "Authorization URL received. Uploading directly to R2 bucket...";
-      
-      // 2. Upload sound blob directly to Cloudflare R2
-      await fetch(uploadUrl, {
+
+      sysConsoleLog.value = "Upload ticket received. Streaming mix to R2 via the edge...";
+
+      // 2. PUT the mix to the ticket URL; the Worker writes it into the R2 bucket.
+      const put = await fetch(uploadUrl, {
         method: 'PUT',
         body: audioBlob,
         headers: { 'Content-Type': 'audio/webm' }
       });
-      
+      if (!put.ok) throw new Error(`Upload rejected (${put.status})`);
+
       sysConsoleLog.value = `Mix upload finalized successfully! Asset path: ${objectKey}`;
       alert(`Audio mix uploaded successfully to R2!`);
     } catch (err) {
@@ -186,10 +195,39 @@ const handleIframeMessage = async (e) => {
   }
 };
 
-const triggerHostStart = () => {
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: 'HOST_START_BATTLE' }));
+const triggerHostStart = async () => {
+  if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+  // Persist a battle row first (requires an authenticated host) so the Durable
+  // Object can record the winner and update Elo against a real id.
+  let battleId = lobbyId;
+  try {
+    const res = await fetch(`${apiBase}/api/battles`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lobbyId,
+        lobbyName: lobbyName.value,
+        // Demo wiring: the host stands in as producer 1. A real match would set
+        // both producer ids; Elo only applies when both are present server-side.
+        producer1Id: auth.isAuthenticated.value ? auth.user.value?.id : null,
+        producer2Id: null,
+      }),
+    });
+    const data = await res.json();
+    if (data.battleId) battleId = data.battleId;
+    sysConsoleLog.value = res.ok ? 'Battle registered. Launching sequence...' : 'Starting battle (not persisted: host not authenticated).';
+  } catch {
+    sysConsoleLog.value = 'Starting battle (battle row not persisted).';
   }
+
+  socket.send(JSON.stringify({
+    type: 'HOST_START_BATTLE',
+    battleId,
+    producer1Id: auth.isAuthenticated.value ? auth.user.value?.id : null,
+    producer2Id: null,
+  }));
 };
 
 const forceLock = () => {
@@ -207,8 +245,8 @@ const sendChatToSocket = (text) => {
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
       type: 'CHAT_MESSAGE',
-      userId: mockUserId,
-      user: mockUser,
+      userId: sessionUserId.value,
+      user: sessionUser.value,
       text
     }));
   }
