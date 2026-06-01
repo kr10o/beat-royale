@@ -1,7 +1,7 @@
 -- server/db/schema.sql
 -- Executed via: npx wrangler d1 execute beat_royale_db --file=./server/db/schema.sql
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT,
@@ -11,7 +11,7 @@ CREATE TABLE users (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
   user_id TEXT PRIMARY KEY,
   display_name TEXT UNIQUE NOT NULL,
   elo_ranking INTEGER DEFAULT 1200,
@@ -22,7 +22,7 @@ CREATE TABLE profiles (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE inventory (
+CREATE TABLE IF NOT EXISTS inventory (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   item_type TEXT, -- 'sample_pack', 'badge', 'vst_skin'
@@ -31,7 +31,7 @@ CREATE TABLE inventory (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE social_graph (
+CREATE TABLE IF NOT EXISTS social_graph (
   user_id TEXT NOT NULL,
   target_id TEXT NOT NULL,
   relationship_type TEXT, -- 'friend', 'rival', 'blocked'
@@ -41,7 +41,7 @@ CREATE TABLE social_graph (
   FOREIGN KEY (target_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE battles (
+CREATE TABLE IF NOT EXISTS battles (
   id TEXT PRIMARY KEY,
   lobby_name TEXT NOT NULL,
   host_id TEXT NOT NULL,
