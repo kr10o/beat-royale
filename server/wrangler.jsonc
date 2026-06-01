@@ -1,43 +1,47 @@
 {
-  "name": "beat-battle-royale",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-03-07",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
-  },
-  "kv_namespaces": [
-    {
-      "binding": "LOBBY_CACHE",
-      "id": "lobby_cache_prod"
-    }
-  ],
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "beat_royale_db",
-      "database_id": "beat_royale_db_id"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "ASSETS_BUCKET",
-      "bucket_name": "beat-royale-assets"
-    }
-  ],
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "BATTLE_LOBBY",
-        "class_name": "BattleLobbyDO"
-      }
-    ]
-  },
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_classes": ["BattleLobbyDO"]
-    }
-  ]
+	"name": "beat-battle-royale",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-03-07",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1
+	},
+	"kv_namespaces": [
+		{
+			"binding": "LOBBY_CACHE",
+			"id": "lobby_cache_prod"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "beat_royale",
+			"database_name": "beat-royale",
+			"database_id": "b6a1a418-b74c-4dfa-ac68-77244ee2405e"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "ASSETS_BUCKET",
+			"bucket_name": "beat-royale-assets"
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "BATTLE_LOBBY",
+				"class_name": "BattleLobbyDO"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_classes": [
+				"BattleLobbyDO"
+			]
+		}
+	]
 }
